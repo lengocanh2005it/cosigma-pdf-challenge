@@ -1,0 +1,6 @@
+export enum PdfStatus {
+  UPLOADED = 'UPLOADED',
+  PROCESSING = 'PROCESSING',
+  INDEXED = 'INDEXED',
+  FAILED = 'FAILED',
+}

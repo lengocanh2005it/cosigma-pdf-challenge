@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+import { WorkerService } from 'nestjs-graphile-worker';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +12,8 @@ async function bootstrap() {
     origin: configService.get<string>('frontend_url', ''),
     credentials: true,
   });
+
+  app.get(WorkerService).run();
 
   const PORT = configService.get<number>('port', 3001);
 

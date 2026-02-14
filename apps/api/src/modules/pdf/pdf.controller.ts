@@ -36,6 +36,6 @@ export class PdfController {
     }),
   )
   async uploadPdf(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
+    return this.pdfService.handleUploadedPdf(file);
   }
 }

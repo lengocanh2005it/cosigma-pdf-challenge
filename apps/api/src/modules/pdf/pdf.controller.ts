@@ -1,6 +1,10 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -37,5 +41,20 @@ export class PdfController {
   )
   async uploadPdf(@UploadedFile() file: Express.Multer.File) {
     return this.pdfService.handleUploadedPdf(file);
+  }
+
+  @Get()
+  async getPdfs() {
+    return this.pdfService.getPdfs();
+  }
+
+  @Get(':id')
+  async getPdf(@Param('id', ParseUUIDPipe) id: string) {
+    return this.pdfService.findById(id);
+  }
+
+  @Delete(':id')
+  async deletePdf(@Param('id', ParseUUIDPipe) id: string) {
+    return this.pdfService.deletePdf(id);
   }
 }

@@ -4,4 +4,5 @@ export enum PdfStatus {
   INDEXING = 'INDEXING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
+  DELETING = 'DELETING',
 }

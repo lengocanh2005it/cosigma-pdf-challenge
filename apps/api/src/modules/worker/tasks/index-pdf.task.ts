@@ -28,45 +28,50 @@ export class IndexPdfTask {
       await this.pdfService.markProcessing(pdfId);
 
       const pdf = await this.pdfService.findById(pdfId);
-
       const buffer = await fs.readFile(pdf.filePath);
 
       const parser = new PDFParse({ data: buffer });
       const result = await parser.getText();
 
-      const fullText = result.text || '';
+      const totalPages = result.pages?.length ?? 0;
 
-      if (!fullText.trim()) {
+      if (!result.text?.trim()) {
         throw new Error('PDF has no extractable text');
       }
 
-      const chunks = this.chunkText(fullText, 1000, 150);
+      const documents: PdfChunkDocument[] = [];
 
-      await this.pdfService.markIndexing(pdfId, chunks.length);
+      result.pages.forEach((page, pageIndex) => {
+        const pageChunks = this.chunkText(page.text, 1000, 150);
+
+        pageChunks.forEach((content, chunkIndex) => {
+          documents.push({
+            pdfId,
+            chunkId: randomUUID(),
+            chunkIndex,
+            pageNumber: pageIndex + 1,
+            content,
+          });
+        });
+      });
+
+      await this.pdfService.markIndexing(pdfId, documents.length, totalPages);
 
       const batchSize = 100;
       let indexedChunks = 0;
 
-      console.log('Chunks: ', chunks);
+      for (let i = 0; i < documents.length; i += batchSize) {
+        const batch = documents.slice(i, i + batchSize);
 
-      for (let i = 0; i < chunks.length; i += batchSize) {
-        const batch = chunks.slice(i, i + batchSize);
-
-        const docs: PdfChunkDocument[] = batch.map(
-          (content: string, index: number) => ({
-            pdfId,
-            chunkId: randomUUID(),
-            chunkIndex: i + index,
-            pageNumber: 1,
-            content,
-          }),
-        );
-
-        await this.elasticService.bulkIndex(docs);
+        await this.elasticService.bulkIndex(batch);
 
         indexedChunks += batch.length;
 
-        await this.pdfService.updateProgress(pdfId, indexedChunks);
+        await this.pdfService.updateProgress(
+          pdfId,
+          indexedChunks,
+          documents.length,
+        );
       }
 
       await this.pdfService.markCompleted(pdfId);
@@ -96,9 +101,7 @@ export class IndexPdfTask {
 
     while (start < cleaned.length) {
       const end = start + chunkSize;
-
       chunks.push(cleaned.slice(start, end));
-
       start = end - overlap;
     }
 

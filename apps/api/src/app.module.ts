@@ -1,13 +1,13 @@
 import { databaseConfig } from '@/config/database.config';
 import envConfig from '@/config/env.config';
-import { graphileWorkerConfig } from '@/config/graphile-worker.config';
+import { ElasticModule } from '@/modules/elastic/elastic.module';
+import { PdfModule } from '@/modules/pdf/pdf.module';
+import { WorkerModule } from '@/modules/worker/worker.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { GraphileWorkerModule } from 'nestjs-graphile-worker';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { PdfModule } from '@/modules/pdf/pdf.module';
 
 @Module({
   imports: [
@@ -24,11 +24,9 @@ import { PdfModule } from '@/modules/pdf/pdf.module';
       useFactory: (configService: ConfigService) =>
         databaseConfig(configService),
     }),
-    GraphileWorkerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => graphileWorkerConfig(config),
-    }),
     PdfModule,
+    ElasticModule,
+    WorkerModule,
   ],
 })
 export class AppModule {}

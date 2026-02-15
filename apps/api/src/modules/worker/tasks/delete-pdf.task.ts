@@ -1,7 +1,7 @@
 import { ElasticService } from '@/modules/elastic/elastic.service';
 import { PdfService } from '@/modules/pdf/pdf.service';
-import { PdfStatus } from '@/modules/pdf/enums/pdf-status.enum';
 import { Injectable, Logger } from '@nestjs/common';
+import { PdfStatus } from '@packages/types';
 import * as fs from 'fs/promises';
 import type { JobHelpers } from 'graphile-worker';
 import { Task, TaskHandler } from 'nestjs-graphile-worker';

@@ -1,8 +1,8 @@
 import { Pdf } from '@/modules/pdf/entities/pdf.entity';
-import { PdfStatus } from '@/modules/pdf/enums/pdf-status.enum';
 import { WorkerService } from '@/modules/worker/worker.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PdfStatus } from '@packages/types';
 import { DeepPartial, Repository } from 'typeorm';
 
 @Injectable()

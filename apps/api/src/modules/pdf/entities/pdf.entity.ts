@@ -1,4 +1,4 @@
-import { PdfStatus } from '@/modules/pdf/enums/pdf-status.enum';
+import { PdfStatus } from '@packages/types';
 import {
   Column,
   CreateDateColumn,

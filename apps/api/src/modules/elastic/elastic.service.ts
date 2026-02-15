@@ -2,9 +2,9 @@ import {
   ELASTIC_CLIENT,
   ELASTIC_INDEX,
 } from '@/common/constants/elastic.constants';
-import { PdfChunkDocument } from '@/common/interfaces/elastic.interface';
 import { Client } from '@elastic/elasticsearch';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { PdfChunkDocument } from '@packages/types';
 
 @Injectable()
 export class ElasticService implements OnModuleInit {

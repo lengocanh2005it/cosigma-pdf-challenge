@@ -1,7 +1,7 @@
-import { PdfChunkDocument } from '@/common/interfaces/elastic.interface';
 import { ElasticService } from '@/modules/elastic/elastic.service';
 import { PdfService } from '@/modules/pdf/pdf.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { PdfChunkDocument } from '@packages/types';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs/promises';
 import type { JobHelpers } from 'graphile-worker';

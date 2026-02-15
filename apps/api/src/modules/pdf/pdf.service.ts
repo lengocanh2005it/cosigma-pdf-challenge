@@ -140,4 +140,13 @@ export class PdfService {
   async hardDelete(id: string) {
     await this.pdfRepo.delete({ id });
   }
+
+  async getPdfStatus(pdfId: string) {
+    const pdf = await this.pdfRepo.findOne({ where: { id: pdfId } });
+    if (!pdf) throw new NotFoundException('PDF not found.');
+    return {
+      status: pdf.status,
+      progress: pdf.progress,
+    };
+  }
 }

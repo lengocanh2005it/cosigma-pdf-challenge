@@ -9,10 +9,10 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { PdfService } from './pdf.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { PdfService } from './pdf.service';
 
 @Controller('pdf')
 export class PdfController {
@@ -56,5 +56,10 @@ export class PdfController {
   @Delete(':id')
   async deletePdf(@Param('id', ParseUUIDPipe) id: string) {
     return this.pdfService.deletePdf(id);
+  }
+
+  @Get(':id/status')
+  async getPdfStatus(@Param('id', ParseUUIDPipe) id: string) {
+    return this.pdfService.getPdfStatus(id);
   }
 }

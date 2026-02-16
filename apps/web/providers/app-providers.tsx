@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
+import React from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -29,7 +31,15 @@ export default function AppProviders({ children }: AppProvidersProps) {
       enableSystem
       disableTransitionOnChange
     >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          theme="colored"
+          newestOnTop
+        />
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

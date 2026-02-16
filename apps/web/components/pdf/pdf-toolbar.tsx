@@ -2,7 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, ZoomIn, ZoomOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PdfToolbarProps {
   fileName: string;
@@ -12,6 +16,7 @@ interface PdfToolbarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onDownload?: () => void;
+  onBack?: () => void;
 }
 
 export function PdfToolbar({
@@ -22,21 +27,25 @@ export function PdfToolbar({
   onZoomIn,
   onZoomOut,
   onDownload,
+  onBack,
 }: PdfToolbarProps) {
-  const router = useRouter();
-
   return (
     <div className="flex items-center justify-between border-b px-4 py-3 bg-background sticky top-0 z-10">
       {/* Left */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/pdf")}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        )}
 
         <div className="flex flex-col">
-          <span className="text-sm font-medium line-clamp-1 max-w-62.5">
-            {fileName}
-          </span>
+          <span className="text-sm font-medium">{fileName}</span>
           <span className="text-xs text-muted-foreground">
             Page {currentPage} of {totalPages}
           </span>
@@ -45,8 +54,12 @@ export function PdfToolbar({
 
       {/* Right */}
       <div className="flex items-center gap-2">
-        {/* Zoom out */}
-        <Button variant="ghost" size="icon" onClick={onZoomOut}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onZoomOut}
+          className="cursor-pointer"
+        >
           <ZoomOut className="w-4 h-4" />
         </Button>
 
@@ -54,16 +67,31 @@ export function PdfToolbar({
           {(scale * 100).toFixed(0)}%
         </span>
 
-        {/* Zoom in */}
-        <Button variant="ghost" size="icon" onClick={onZoomIn}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onZoomIn}
+          className="cursor-pointer"
+        >
           <ZoomIn className="w-4 h-4" />
         </Button>
 
-        {/* Download */}
         {onDownload && (
-          <Button variant="ghost" size="icon" onClick={onDownload}>
-            <Download className="w-4 h-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDownload}
+                className="cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download</p>
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
     </div>

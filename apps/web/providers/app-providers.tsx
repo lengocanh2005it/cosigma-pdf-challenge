@@ -1,5 +1,6 @@
 "use client";
 
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import React from "react";
@@ -32,7 +33,7 @@ export default function AppProviders({ children }: AppProvidersProps) {
       disableTransitionOnChange
     >
       <QueryClientProvider client={queryClient}>
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <ToastContainer
           position="top-right"
           autoClose={3000}

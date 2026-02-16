@@ -3,8 +3,9 @@
 import { usePdf } from "@/hooks/use-pdf";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { PdfToolbar } from "@/components/pdf/pdf-toolbar";
 
 const PdfViewer = dynamic(
   () => import("@/components/pdf/pdf-viewer").then((mod) => mod.PdfViewer),
@@ -20,6 +21,7 @@ const PdfViewer = dynamic(
 
 export default function PdfDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
 
   const { data: pdf, isLoading, isError } = usePdf(id);
@@ -46,36 +48,35 @@ export default function PdfDetailPage() {
 
   const fileUrl = `http://localhost:3001/files/${pdf.fileName}`;
 
+  const handleZoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.2, 2));
+  };
+
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.2, 0.6));
+  };
+
+  const handleDownload = () => {
+    window.open(fileUrl, "_blank");
+  };
+
+  const handleBack = () => {
+    router.push("/pdf");
+  };
+
   return (
     <div className="flex flex-col h-screen">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setScale((prev) => Math.max(prev - 0.2, 0.6))}
-            className="px-3 py-1 border rounded hover:bg-gray-100"
-          >
-            -
-          </button>
+      <PdfToolbar
+        fileName={pdf.originalName}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        scale={scale}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onDownload={handleDownload}
+        onBack={handleBack}
+      />
 
-          <span className="text-sm font-medium">
-            Zoom: {(scale * 100).toFixed(0)}%
-          </span>
-
-          <button
-            onClick={() => setScale((prev) => Math.min(prev + 0.2, 2))}
-            className="px-3 py-1 border rounded hover:bg-gray-100"
-          >
-            +
-          </button>
-        </div>
-
-        <div className="text-sm text-gray-600">
-          {pdf.originalName} — Page {currentPage} / {totalPages}
-        </div>
-      </div>
-
-      {/* Viewer */}
       <div className="flex-1 overflow-hidden bg-gray-100">
         <PdfViewer
           fileUrl={fileUrl}

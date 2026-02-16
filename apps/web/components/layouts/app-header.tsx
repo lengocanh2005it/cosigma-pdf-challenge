@@ -28,14 +28,21 @@ export function AppHeader() {
   };
 
   return (
-    <header className="w-full border-b bg-background shadow-sm">
+    <header className="w-full border-b bg-background shadow-sm sticky top-0 z-999">
       <div className="container mx-auto flex h-16 items-center justify-between px-6">
-        <Link href="/pdf" className="flex items-center">
+        <Link href="/pdf" className="flex items-center gap-1">
           <img
             src="/logo.png"
             alt="Cosigma"
             className="h-9 w-auto transition-opacity hover:opacity-80"
           />
+
+          <span
+            className="text-lg font-semibold bg-linear-to-r
+           from-primary to-purple-500 bg-clip-text text-transparent"
+          >
+            Cosigma
+          </span>
         </Link>
 
         <div className="hidden md:flex flex-1 justify-center">
@@ -71,7 +78,7 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="p-0 h-auto">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="/avatar.png" />
+                  <AvatarImage src="/avatar.jpg" />
                   <AvatarFallback>NA</AvatarFallback>
                 </Avatar>
               </Button>

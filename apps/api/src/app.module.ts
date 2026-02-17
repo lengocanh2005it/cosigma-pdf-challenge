@@ -1,6 +1,7 @@
 import { databaseConfig } from '@/config/database.config';
 import envConfig from '@/config/env.config';
 import { ElasticModule } from '@/modules/elastic/elastic.module';
+import { EventsModule } from '@/modules/events/events.module';
 import { PdfModule } from '@/modules/pdf/pdf.module';
 import { WorkerModule } from '@/modules/worker/worker.module';
 import { Module } from '@nestjs/common';
@@ -27,6 +28,7 @@ import { join } from 'path';
     PdfModule,
     ElasticModule,
     WorkerModule,
+    EventsModule,
   ],
 })
 export class AppModule {}

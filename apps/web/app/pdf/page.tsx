@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { usePdfs } from "@/hooks/use-pdf";
-import { PdfGrid } from "@/components/pdf/pdf-grid";
 import { PdfEmptyState } from "@/components/pdf/pdf-empty-state";
-import { PdfLoadingState } from "@/components/pdf/pdf-loading-state";
+import { PdfGrid } from "@/components/pdf/pdf-grid";
 import { PdfListHeader } from "@/components/pdf/pdf-list-header";
+import { PdfLoadingState } from "@/components/pdf/pdf-loading-state";
+import { usePdfs } from "@/hooks/use-pdf";
+import { usePdfListSSE } from "@/hooks/use-pdf-list-sse";
+import { useState } from "react";
 
 export default function PdfPage() {
   const [search, setSearch] = useState("");
 
   const { data, isLoading } = usePdfs();
+
+  usePdfListSSE();
 
   const isEmpty = !isLoading && (!data || data.length === 0);
 

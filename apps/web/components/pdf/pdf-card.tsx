@@ -1,5 +1,6 @@
 "use client";
 
+import { useDeletePdf } from "@/hooks/use-pdf";
 import { cn, shortFileSuffix } from "@/lib/utils";
 import { Pdf, PdfStatus } from "@packages/types";
 import {
@@ -19,6 +20,7 @@ interface PdfCardProps {
 
 export function PdfCard({ pdf, onDelete }: PdfCardProps) {
   const router = useRouter();
+  const { mutate, isPending } = useDeletePdf();
 
   const {
     id,
@@ -45,7 +47,8 @@ export function PdfCard({ pdf, onDelete }: PdfCardProps) {
   };
 
   const handleDelete = () => {
-    if (isDeleting) return;
+    if (isDeleting || isPending) return;
+    mutate(id);
     onDelete?.(id);
   };
 
@@ -111,7 +114,7 @@ export function PdfCard({ pdf, onDelete }: PdfCardProps) {
       )}
     >
       {/* Preview */}
-      <div className="relative h-44 rounded-xl overflow-hidden mb-4 border bg-gradient-to-br from-muted to-muted/40">
+      <div className="relative h-44 rounded-xl overflow-hidden mb-4 border bg-linear-to-br from-muted to-muted/40">
         <div className="absolute inset-4 bg-white dark:bg-zinc-900 rounded-lg shadow-sm p-4 space-y-2">
           <div className="h-2 bg-gray-200 dark:bg-zinc-700 rounded w-4/5" />
           <div className="h-2 bg-gray-200 dark:bg-zinc-700 rounded w-5/6" />
@@ -134,9 +137,19 @@ export function PdfCard({ pdf, onDelete }: PdfCardProps) {
       </div>
 
       {/* File name */}
-      <h3 className="font-semibold text-sm truncate">
-        <span className="truncate">{originalName}</span>
-        <span className="ml-1 text-xs text-muted-foreground">
+      <h3 className="font-semibold text-sm truncate flex items-center gap-1">
+        <span
+          onClick={isClickable ? handleView : undefined}
+          className={cn(
+            "truncate transition",
+            isClickable
+              ? "cursor-pointer hover:underline hover:text-primary"
+              : "cursor-not-allowed opacity-70",
+          )}
+        >
+          {originalName}
+        </span>
+        <span className="text-xs text-muted-foreground">
           • {shortFileSuffix(fileName)}
         </span>
       </h3>

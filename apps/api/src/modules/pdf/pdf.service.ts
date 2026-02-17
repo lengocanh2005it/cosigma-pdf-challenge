@@ -1,3 +1,4 @@
+import { EventBusService } from '@/modules/events/event-bus.service';
 import { Pdf } from '@/modules/pdf/entities/pdf.entity';
 import { WorkerService } from '@/modules/worker/worker.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -11,6 +12,7 @@ export class PdfService {
     @InjectRepository(Pdf)
     private readonly pdfRepo: Repository<Pdf>,
     private readonly workerService: WorkerService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async create(data: Partial<Pdf>) {
@@ -57,22 +59,45 @@ export class PdfService {
     });
   }
 
-  async updateProgress(id: string, indexedChunks: number, totalChunks: number) {
+  async updateProgress(
+    pdfId: string,
+    indexedChunks: number,
+    totalChunks: number,
+  ) {
     const progress =
       totalChunks > 0 ? Math.round((indexedChunks / totalChunks) * 100) : 0;
 
-    await this.updatePdf(id, {
+    await this.updatePdf(pdfId, {
       indexedChunks,
+      progress,
+    });
+
+    this.eventBus.emit('pdf', {
+      id: pdfId,
+      status: PdfStatus.INDEXING,
+      indexedChunks,
+      totalChunks,
       progress,
     });
   }
 
   async markCompleted(id: string) {
-    await this.updatePdf(id, {
-      status: PdfStatus.COMPLETED,
-      progress: 100,
-      indexedAt: new Date(),
-    });
+    const pdf = await this.pdfRepo.findOne({ where: { id } });
+
+    if (pdf) {
+      await this.updatePdf(id, {
+        status: PdfStatus.COMPLETED,
+        progress: 100,
+        indexedAt: new Date(),
+      });
+
+      this.eventBus.emit('pdf', {
+        id,
+        status: PdfStatus.COMPLETED,
+        progress: 100,
+        totalPages: pdf.totalPages,
+      });
+    }
   }
 
   async markFailed(id: string, errorMessage: string) {
@@ -81,7 +106,6 @@ export class PdfService {
       errorMessage,
     });
 
-    // atomic increment tránh race condition
     await this.pdfRepo.increment({ id }, 'retryCount', 1);
   }
 
@@ -119,11 +143,15 @@ export class PdfService {
   }
 
   async getPdfs() {
-    return this.pdfRepo.find();
+    return this.pdfRepo.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 
   async deletePdf(id: string) {
-    await this.findById(id);
+    const pdf = await this.findById(id);
 
     await this.updatePdf(id, {
       status: PdfStatus.DELETING,
@@ -134,19 +162,15 @@ export class PdfService {
     return {
       success: true,
       message: 'Delete job queued successfully!',
+      fileName: pdf.originalName,
     };
   }
 
   async hardDelete(id: string) {
     await this.pdfRepo.delete({ id });
-  }
-
-  async getPdfStatus(pdfId: string) {
-    const pdf = await this.pdfRepo.findOne({ where: { id: pdfId } });
-    if (!pdf) throw new NotFoundException('PDF not found.');
-    return {
-      status: pdf.status,
-      progress: pdf.progress,
-    };
+    this.eventBus.emit('pdf', {
+      id,
+      status: PdfStatus.DELETING,
+    });
   }
 }

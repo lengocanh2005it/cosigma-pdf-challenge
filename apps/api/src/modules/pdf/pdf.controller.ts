@@ -1,22 +1,29 @@
+import { EventBusService } from '@/modules/events/event-bus.service';
 import {
   BadRequestException,
   Controller,
   Delete,
   Get,
+  MessageEvent,
   Param,
   ParseUUIDPipe,
   Post,
+  Sse,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { map, Observable } from 'rxjs';
 import { PdfService } from './pdf.service';
 
 @Controller('pdf')
 export class PdfController {
-  constructor(private readonly pdfService: PdfService) {}
+  constructor(
+    private readonly pdfService: PdfService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
   @Post()
   @UseInterceptors(
@@ -58,8 +65,8 @@ export class PdfController {
     return this.pdfService.deletePdf(id);
   }
 
-  @Get(':id/status')
-  async getPdfStatus(@Param('id', ParseUUIDPipe) id: string) {
-    return this.pdfService.getPdfStatus(id);
+  @Sse('events/stream')
+  sse(): Observable<MessageEvent> {
+    return this.eventBus.on('pdf').pipe(map((data) => ({ data })));
   }
 }

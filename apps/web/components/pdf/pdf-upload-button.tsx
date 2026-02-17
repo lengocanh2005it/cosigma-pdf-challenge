@@ -1,9 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { UploadProgressModal } from "@/components/upload-progress-modal";
+import { useUploadPdf } from "@/hooks/use-upload-pdf";
 import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import { useRef } from "react";
 
 interface PdfUploadButtonProps {
   className?: string;
@@ -16,17 +18,46 @@ export function PdfUploadButton({
   variant = "default",
   size = "default",
 }: PdfUploadButtonProps) {
-  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const uploadMutation = useUploadPdf();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    uploadMutation.mutate(file);
+
+    e.target.value = "";
+  };
 
   return (
-    <Button
-      variant={variant}
-      size={size}
-      onClick={() => router.push("/upload")}
-      className={cn("gap-2", className)}
-    >
-      <Plus className="w-4 h-4" />
-      {size !== "icon" && "Upload PDF"}
-    </Button>
+    <>
+      <UploadProgressModal
+        open={uploadMutation.isPending}
+        progress={uploadMutation.progress}
+        fileName={uploadMutation.fileName}
+      />
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        hidden
+        onChange={handleFileChange}
+      />
+
+      <Button
+        variant={variant}
+        size={size}
+        onClick={() => inputRef.current?.click()}
+        className={cn("gap-2 cursor-pointer", className)}
+        disabled={uploadMutation.isPending}
+      >
+        <Plus className="w-4 h-4" />
+
+        {size !== "icon" &&
+          (uploadMutation.isPending ? "Uploading..." : "Upload PDF")}
+      </Button>
+    </>
   );
 }

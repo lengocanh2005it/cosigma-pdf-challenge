@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { UploadProgressModal } from "@/components/upload-progress-modal";
+import { UploadProgressModal } from "@/components/pdf/upload-progress-modal";
 import { useUploadPdf } from "@/hooks/use-upload-pdf";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";

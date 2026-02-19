@@ -1,3 +1,4 @@
+import { ElasticService } from '@/modules/elastic/elastic.service';
 import { EventBusService } from '@/modules/events/event-bus.service';
 import { Pdf } from '@/modules/pdf/entities/pdf.entity';
 import { WorkerService } from '@/modules/worker/worker.service';
@@ -13,6 +14,7 @@ export class PdfService {
     private readonly pdfRepo: Repository<Pdf>,
     private readonly workerService: WorkerService,
     private readonly eventBus: EventBusService,
+    private readonly elasticService: ElasticService,
   ) {}
 
   async create(data: Partial<Pdf>) {
@@ -172,5 +174,9 @@ export class PdfService {
       id,
       status: PdfStatus.DELETING,
     });
+  }
+
+  async findRelated(pdfId: string, query: string) {
+    return this.elasticService.findRelated(pdfId, query);
   }
 }

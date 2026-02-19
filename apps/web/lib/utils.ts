@@ -1,3 +1,4 @@
+import { HIGHLIGHT_COLORS } from "@/lib/constants";
 import { AxiosError } from "axios";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "react-toastify";
@@ -37,3 +38,17 @@ export function shortFileSuffix(fileName: string) {
   const parts = base.split("-");
   return parts[1]?.slice(-4);
 }
+
+export const getNextAvailableColor = (usedColors: string[]) => {
+  const available = HIGHLIGHT_COLORS.filter(
+    (color) => !usedColors.includes(color),
+  );
+
+  if (available.length > 0) {
+    return available[0];
+  }
+
+  const base = HIGHLIGHT_COLORS[usedColors.length % HIGHLIGHT_COLORS.length];
+
+  return base;
+};

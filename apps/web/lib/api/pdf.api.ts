@@ -19,3 +19,19 @@ export const getPdfStatus = async (id: string) => {
   const response = await axiosInstance.delete(`/pdf/${id}/status`);
   return response.data;
 };
+
+export const findPdfsRelated = async (dto: {
+  pdfId: string;
+  query: string;
+}) => {
+  const response = await axiosInstance.post(
+    `/pdf/${dto.pdfId}/find-related`,
+    { query: dto.query },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  return response.data;
+};

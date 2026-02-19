@@ -113,7 +113,6 @@ export function PdfCard({ pdf, onDelete }: PdfCardProps) {
         "border-border shadow-sm hover:shadow-md hover:-translate-y-1",
       )}
     >
-      {/* Preview */}
       <div className="relative h-44 rounded-xl overflow-hidden mb-4 border bg-linear-to-br from-muted to-muted/40">
         <div className="absolute inset-4 bg-white dark:bg-zinc-900 rounded-lg shadow-sm p-4 space-y-2">
           <div className="h-2 bg-gray-200 dark:bg-zinc-700 rounded w-4/5" />
@@ -136,10 +135,13 @@ export function PdfCard({ pdf, onDelete }: PdfCardProps) {
         )}
       </div>
 
-      {/* File name */}
       <h3 className="font-semibold text-sm truncate flex items-center gap-1">
         <span
-          onClick={isClickable ? handleView : undefined}
+          onClick={
+            isClickable && pdf.status === PdfStatus.COMPLETED
+              ? handleView
+              : undefined
+          }
           className={cn(
             "truncate transition",
             isClickable
@@ -154,29 +156,24 @@ export function PdfCard({ pdf, onDelete }: PdfCardProps) {
         </span>
       </h3>
 
-      {/* Metadata */}
       <div className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
         <span>{mimeType?.split("/")[1]?.toUpperCase()}</span>
         <span>•</span>
         <span>{formatBytes(fileSize)}</span>
       </div>
 
-      {/* Status Badge */}
       <div className="mt-3">{renderStatusBadge()}</div>
 
-      {/* Indexing chunks */}
       {status === PdfStatus.INDEXING && (
         <p className="text-[11px] text-muted-foreground mt-1">
           {indexedChunks} / {totalChunks} chunks indexed
         </p>
       )}
 
-      {/* Date */}
       <p className="text-xs text-muted-foreground mt-2">
         {new Date(createdAt).toLocaleDateString()}
       </p>
 
-      {/* Error message */}
       {status === PdfStatus.FAILED && errorMessage && (
         <p className="text-xs text-red-500 mt-2 line-clamp-1">
           {errorMessage}
@@ -184,10 +181,9 @@ export function PdfCard({ pdf, onDelete }: PdfCardProps) {
         </p>
       )}
 
-      {/* Actions */}
       {!isDeleting && (
         <div className="absolute bottom-4 right-4 flex items-center gap-2">
-          {isClickable && (
+          {isClickable && pdf.status === PdfStatus.COMPLETED && (
             <button
               onClick={handleView}
               className="p-2 rounded-full bg-background/80 backdrop-blur-md 

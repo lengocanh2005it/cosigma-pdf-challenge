@@ -1,8 +1,9 @@
 import { ElasticProvider } from '@/common/providers/elastic.provider';
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ElasticService } from './elastic.service';
 
+@Global()
 @Module({
   imports: [ConfigModule],
   providers: [ElasticProvider, ElasticService],

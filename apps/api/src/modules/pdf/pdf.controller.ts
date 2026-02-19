@@ -1,6 +1,7 @@
 import { EventBusService } from '@/modules/events/event-bus.service';
 import {
   BadRequestException,
+  Body,
   Controller,
   Delete,
   Get,
@@ -68,5 +69,10 @@ export class PdfController {
   @Sse('events/stream')
   sse(): Observable<MessageEvent> {
     return this.eventBus.on('pdf').pipe(map((data) => ({ data })));
+  }
+
+  @Post(':id/find-related')
+  async findRelated(@Param('id') pdfId: string, @Body('query') query: string) {
+    return this.pdfService.findRelated(pdfId, query);
   }
 }

@@ -31,7 +31,6 @@ export function PdfToolbar({
 }: PdfToolbarProps) {
   return (
     <div className="flex items-center justify-between border-b px-4 py-3 bg-background sticky top-0 z-10">
-      {/* Left */}
       <div className="flex items-center gap-3">
         {onBack && (
           <Button
@@ -52,8 +51,7 @@ export function PdfToolbar({
         </div>
       </div>
 
-      {/* Right */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mr-32">
         <Button
           variant="ghost"
           size="icon"

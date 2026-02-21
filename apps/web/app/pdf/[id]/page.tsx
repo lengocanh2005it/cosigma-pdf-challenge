@@ -17,8 +17,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { HighlightDrawer } from "@/components/highlight/highlight-drawer";
-import { RelatedPanel } from "@/components/highlight/related-panel";
 import { PdfToolbar } from "@/components/pdf/pdf-toolbar";
+import { RelatedPanel } from "@/components/related/related-panel";
 import { Button } from "@/components/ui/button";
 import { getNextAvailableColor } from "@/lib/utils";
 import { HighlightItem, HighlightRect, RelatedResult } from "@packages/types";
@@ -90,7 +90,6 @@ export default function PdfDetailPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // ESC
       if (e.key === "Escape") {
         handleClosePanel();
         return;
@@ -234,7 +233,6 @@ export default function PdfDetailPage() {
             jumpToPage={jumpPage}
             activeMatch={activeMatch}
             onSelectText={handleSelectText}
-            clearSelectionSignal={clearSelectionSignal}
             pendingRects={pendingRects}
             highlights={highlights}
           />

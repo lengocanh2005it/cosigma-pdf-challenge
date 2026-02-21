@@ -1,4 +1,5 @@
 export interface HighlightRect {
+  pageNumber: number;
   x: number;
   y: number;
   width: number;

@@ -4,7 +4,12 @@ export interface PdfChunkDocument {
   chunkIndex: number;
   pageNumber: number;
   content: string;
-  embedding?: number[];
+  normalizedContent: string;
+  anchorY: number;
+  rectTop: number;
+  rectLeft: number;
+  rectWidth: number;
+  rectHeight: number;
 }
 
 export enum PdfStatus {

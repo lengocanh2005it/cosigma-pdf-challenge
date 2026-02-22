@@ -1,6 +1,7 @@
 import { databaseConfig } from '@/config/database.config';
 import envConfig from '@/config/env.config';
 import { ElasticModule } from '@/modules/elastic/elastic.module';
+import { EmbeddingModule } from '@/modules/embedding/embedding.module';
 import { EventsModule } from '@/modules/events/events.module';
 import { PdfModule } from '@/modules/pdf/pdf.module';
 import { WorkerModule } from '@/modules/worker/worker.module';
@@ -29,6 +30,7 @@ import { join } from 'path';
     ElasticModule,
     WorkerModule,
     EventsModule,
+    EmbeddingModule,
   ],
 })
 export class AppModule {}

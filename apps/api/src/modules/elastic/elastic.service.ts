@@ -2,8 +2,8 @@ import {
   ELASTIC_CLIENT,
   ELASTIC_INDEX,
 } from '@/common/constants/elastic.constants';
+import { EmbeddingService } from '@/modules/embedding/embedding.service';
 import { Client } from '@elastic/elasticsearch';
-import { QueryDslQueryContainer } from '@elastic/elasticsearch/lib/api/typesWithBodyKey';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { PdfChunkDocument, RelatedResult } from '@packages/types';
 
@@ -12,6 +12,7 @@ export class ElasticService implements OnModuleInit {
   constructor(
     @Inject(ELASTIC_CLIENT)
     private readonly client: Client,
+    private readonly embeddingService: EmbeddingService,
   ) {}
 
   async onModuleInit() {
@@ -50,6 +51,12 @@ export class ElasticService implements OnModuleInit {
             rectLeft: { type: 'float' },
             rectWidth: { type: 'float' },
             rectHeight: { type: 'float' },
+            embedding: {
+              type: 'dense_vector',
+              dims: 768,
+              index: true,
+              similarity: 'cosine',
+            },
           },
         },
       });
@@ -59,7 +66,14 @@ export class ElasticService implements OnModuleInit {
   async bulkIndex(docs: PdfChunkDocument[]) {
     if (!docs.length) return;
 
-    const body = docs.flatMap((doc) => [
+    const docsWithEmbedding = await Promise.all(
+      docs.map(async (doc) => ({
+        ...doc,
+        embedding: await this.embeddingService.embed(doc.content),
+      })),
+    );
+
+    const body = docsWithEmbedding.flatMap((doc) => [
       { index: { _index: ELASTIC_INDEX, _id: doc.chunkId } },
       doc,
     ]);
@@ -70,60 +84,6 @@ export class ElasticService implements OnModuleInit {
     });
   }
 
-  private buildBaseQuery(pdfId: string, query: string): QueryDslQueryContainer {
-    const wordCount = query.split(/\s+/).length;
-    const enableFuzzy = wordCount <= 5;
-
-    return {
-      bool: {
-        filter: [{ term: { pdfId } }],
-        should: [
-          {
-            match_phrase: {
-              content: {
-                query,
-                boost: 5,
-              },
-            },
-          },
-          {
-            match: {
-              content: {
-                query,
-                operator: 'and',
-                boost: 3,
-              },
-            },
-          },
-          {
-            match: {
-              content: {
-                query,
-                operator: 'or',
-                minimum_should_match: '70%',
-                boost: 1.5,
-              },
-            },
-          },
-          ...(enableFuzzy
-            ? [
-                {
-                  match: {
-                    content: {
-                      query,
-                      fuzziness: 'AUTO',
-                      boost: 0.5,
-                    },
-                  },
-                },
-              ]
-            : []),
-        ],
-        minimum_should_match: 1,
-      },
-    };
-  }
-
   async findRelated(
     pdfId: string,
     query: string,
@@ -132,27 +92,72 @@ export class ElasticService implements OnModuleInit {
   ): Promise<RelatedResult[]> {
     const cleanedQuery = query.replace(/\s+/g, ' ').trim().toLowerCase();
 
+    const queryEmbedding = await this.embeddingService.embed(cleanedQuery);
+
+    let currentIndex: number | null = null;
+
+    if (currentChunkId) {
+      const current = await this.client
+        .get<PdfChunkDocument>({
+          index: ELASTIC_INDEX,
+          id: currentChunkId,
+        })
+        .catch(() => null);
+
+      currentIndex = current?._source?.chunkIndex ?? null;
+    }
+
     const result = await this.client.search<PdfChunkDocument>({
       index: ELASTIC_INDEX,
       size,
       query: {
         script_score: {
-          query: this.buildBaseQuery(pdfId, cleanedQuery),
+          query: {
+            bool: {
+              filter: [{ term: { pdfId } }],
+              should: [
+                {
+                  match_phrase: {
+                    content: {
+                      query: cleanedQuery,
+                      boost: 3,
+                    },
+                  },
+                },
+                {
+                  match: {
+                    content: {
+                      query: cleanedQuery,
+                      operator: 'or',
+                      minimum_should_match: '60%',
+                      boost: 1.5,
+                    },
+                  },
+                },
+              ],
+              minimum_should_match: 0,
+            },
+          },
           script: {
             source: `
-            double score = _score;
-            if (params.currentChunkId != null && doc['chunkId'].value == params.currentChunkId) {
-              return score * 0.05;
-            }
-            return score;
-          `,
+    double bm25 = _score;
+    bm25 = bm25 / (bm25 + 5.0);
+
+    if (doc['embedding'].size() == 0) {
+      return bm25;
+    }
+
+    double vectorScore = cosineSimilarity(params.queryVector, 'embedding');
+    vectorScore = (vectorScore + 1.0) / 2.0;
+
+    return (vectorScore * 0.7) + (bm25 * 0.3);
+  `,
             params: {
-              currentChunkId: currentChunkId ?? null,
+              queryVector: queryEmbedding,
             },
           },
         },
       },
-      sort: [{ _score: { order: 'desc' } }, { pageNumber: { order: 'asc' } }],
       highlight: {
         pre_tags: ['<em>'],
         post_tags: ['</em>'],
@@ -174,33 +179,18 @@ export class ElasticService implements OnModuleInit {
       const source = hit._source as PdfChunkDocument;
       const rawScore = hit._score ?? 0;
 
-      const contentLower = source.normalizedContent;
+      const highlightText = hit.highlight?.content?.[0];
 
       let matchedWord = cleanedQuery;
 
-      const highlightText = hit.highlight?.content?.[0];
       if (highlightText) {
-        const match = highlightText.match(/<em>(.*?)<\/em>/);
-        if (match && match[1]) {
-          matchedWord = match[1].toLowerCase();
+        const matches = [...highlightText.matchAll(/<em>(.*?)<\/em>/g)];
+        if (matches.length) {
+          matchedWord = matches
+            .map((m) => m[1])
+            .join(' ')
+            .toLowerCase();
         }
-      }
-
-      const matchIndex = contentLower.indexOf(matchedWord);
-
-      let rectTop = source.rectTop;
-      let rectLeft = source.rectLeft;
-      let rectWidth = source.rectWidth;
-      let rectHeight = source.rectHeight;
-
-      if (matchIndex !== -1) {
-        const totalLength = contentLower.length;
-
-        const ratioStart = matchIndex / totalLength;
-        const ratioWidth = matchedWord.length / totalLength;
-
-        rectLeft = source.rectLeft + source.rectWidth * ratioStart;
-        rectWidth = source.rectWidth * ratioWidth;
       }
 
       return {
@@ -212,10 +202,10 @@ export class ElasticService implements OnModuleInit {
         score: rawScore,
         confidence: Number((rawScore / maxScore).toFixed(3)),
         anchorY: source.anchorY,
-        rectTop,
-        rectLeft,
-        rectWidth,
-        rectHeight,
+        rectTop: source.rectTop,
+        rectLeft: source.rectLeft,
+        rectWidth: source.rectWidth,
+        rectHeight: source.rectHeight,
       };
     });
   }

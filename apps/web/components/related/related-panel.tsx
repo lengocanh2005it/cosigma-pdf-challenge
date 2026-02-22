@@ -32,6 +32,26 @@ export function RelatedPanel({
   const [collapsed, setCollapsed] = useState(false);
   const resultCount = results.length;
 
+  const renderSnippet = (snippet: string) => {
+    const hasHighlight = snippet.includes("<em>");
+
+    if (hasHighlight) {
+      return snippet;
+    }
+
+    const cleanText = snippet.replace(/<[^>]+>/g, "");
+
+    const parts = cleanText.split(/(\s+)/);
+
+    return parts
+      .map((part) => {
+        if (part.trim() === "") return part;
+
+        return `<span class="bg-yellow-200 text-black px-1 font-bold rounded">${part}</span>`;
+      })
+      .join("");
+  };
+
   return (
     <Card
       className={`
@@ -139,15 +159,17 @@ export function RelatedPanel({
                       </div>
 
                       <div
-                        className="text-sm leading-relaxed mb-3 text-foreground
-                        [&_em]:bg-yellow-200
-    [&_em]:text-black
-    [&_em]:not-italic
-    [&_em]:font-semibold
-    [&_em]:px-1
-    [&_em]:rounded"
+                        className="
+                          text-sm leading-relaxed mb-3 text-foreground
+                          [&_em]:bg-yellow-200
+                          [&_em]:text-black
+                          [&_em]:not-italic
+                          [&_em]:font-semibold
+                          [&_em]:px-1
+                          [&_em]:rounded
+                        "
                         dangerouslySetInnerHTML={{
-                          __html: item.snippet,
+                          __html: renderSnippet(item.snippet),
                         }}
                       />
 
@@ -157,7 +179,7 @@ export function RelatedPanel({
                         onClick={() => onJump(item)}
                         className="w-full rounded-lg cursor-pointer"
                       >
-                        Jump to page
+                        Jump to
                       </Button>
                     </Card>
                   ))}

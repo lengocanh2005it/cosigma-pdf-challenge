@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,7 +30,31 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: pdf_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "
+        ollama serve &
+        sleep 5 &&
+        ollama pull nomic-embed-text &&
+        wait
+      "
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:11434 || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,3 +62,4 @@ services:
 volumes:
   postgres_data:
   es_data:
+  ollama_data:
